@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEON REACTOR | 2026 Edition</title>
+    <style>
+        :root {
+            --bg: #020205;
+            --neon-cyan: #00f2ff;
+            --neon-magenta: #ff00ff;
+            --neon-yellow: #f3ff00;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg);
+            background-image: 
+                radial-gradient(circle at 50% 50%, #1a0033 0%, transparent 70%),
+                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 100%, 100% 2px, 3px 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            overflow: hidden;
+        }
+
+        .reactor-shell {
+            position: relative;
+            width: 90%;
+            max-width: 450px;
+            padding: 40px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(0,0,0,0.8);
+        }
+
+        .logo {
+            font-size: 2.2rem;
+            font-weight: 900;
+            letter-spacing: 5px;
+            margin-bottom: 25px;
+            background: linear-gradient(to bottom, #fff 20%, var(--neon-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 8px var(--neon-cyan));
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(0,0,0,0.4);
+            padding: 15px;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+        }
+
+        .label { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        .val { font-size: 1.6rem; font-weight: bold; color: #fff; }
+
+        #timer {
+            font-size: 4rem;
+            font-weight: 900;
+            color: var(--neon-magenta);
+            text-shadow: 0 0 20px var(--neon-magenta);
+            margin: 10px 0;
+        }
+
+        .combo-badge {
+            display: inline-block;
+            padding: 4px 15px;
+            background: var(--neon-yellow);
+            color: #000;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px var(--neon-yellow);
+            transition: 0.2s;
+            opacity: 0;
+        }
+
+        #tapBtn {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            border: 2px solid var(--neon-cyan);
+            background: radial-gradient(circle, rgba(0,242,255,0.1) 0%, transparent 70%);
+            color: var(--neon-cyan);
+            font-size: 1.4rem;
+            font-weight: bold;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.1s;
+            box-shadow: 0 0 20px rgba(0,242,255,0.2), inset 0 0 20px rgba(0,242,255,0.2);
+            margin-bottom: 20px;
+        }
+
+        #tapBtn:active:not(:disabled) {
+            transform: scale(0.9);
+            background: var(--neon-cyan);
+            color: #000;
+            box-shadow: 0 0 50px var(--neon-cyan);
+        }
+
+        #tapBtn:disabled {
+            border-color: #333;
+            color: #444;
+            box-shadow: none;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        #startBtn { 
+            background: var(--neon-cyan); 
+            box-shadow: 0 0 15px rgba(0,242,255,0.4);
+        }
+
+        #resetBtn { background: #1a1a1a; color: #666; }
+
+        .status-msg {
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: #aaa;
+            letter-spacing: 1px;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .low-time { animation: pulse 0.5s infinite; }
+    </style>
+</head>
+<body>
+
+    <div class="reactor-shell">
+        <div class="logo">NEON REACTOR</div>
+        
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="label">Total Energy</div>
+                <div id="score" class="val">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Max Output</div>
+                <div id="highScore" class="val">0</div>
+            </div>
+        </div>
+
+        <div id="timer">10</div>
+        <div id="combo" class="combo-badge">COMBO 1x</div>
+
+        <button id="tapBtn" disabled>TAP TO CHARGE</button>
+
+        <div class="controls">
+            <button id="startBtn" class="btn">Initiate</button>
+            <button id="resetBtn" class="btn">Clear</button>
+        </div>
+
+        <div id="status" class="status-msg">SYSTEM IDLE</div>
+    </div>
+
+<script>
+    // --- Audio System ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playTone(freq, type, duration) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    const sounds = {
+        tap: () => playTone(400 + (combo * 50), 'sine', 0.1),
+        start: () => playTone(800, 'square', 0.3),
+        end: () => {
+            playTone(300, 'sawtooth', 0.5);
+            playTone(200, 'sawtooth', 0.8);
+        },
+        record: () => {
+            playTone(1000, 'sine', 0.2);
+            setTimeout(() => playTone(1300, 'sine', 0.2), 100);
+        }
+    };
+
+    // --- Game Logic ---
+    let score = 0;
+    let highScore = localStorage.getItem('neon_reactor_top') || 0;
+    let timeLeft = 10;
+    let combo = 0;
+    let lastTap = 0;
+    let gameActive = false;
+    let timerId = null;
+
+    const scoreEl = document.getElementById('score');
+    const highEl = document.getElementById('highScore');
+    const timerEl = document.getElementById('timer');
+    const comboEl = document.getElementById('combo');
+    const tapBtn = document.getElementById('tapBtn');
+    const startBtn = document.getElementById('startBtn');
+    const statusEl = document.getElementById('status');
+
+    highEl.innerText = highScore;
+
+    function startGame() {
+        if (gameActive) return;
+        
+        score = 0;
+        timeLeft = 10;
+        combo = 0;
+        gameActive = true;
+        
+        sounds.start();
+        updateUI();
+
+        tapBtn.disabled = false;
+        startBtn.disabled = true;
+        statusEl.innerText = "REACTOR ONLINE - OVERLOAD IT!";
+        timerEl.classList.remove('low-time');
+
+        timerId = setInterval(() => {
+            timeLeft--;
+            timerEl.innerText = timeLeft;
+            if (timeLeft <= 3) timerEl.classList.add('low-time');
+            
+            if (timeLeft <= 0) endGame();
+        }, 1000);
+    }
+
+    function handleTap() {
+        if (!gameActive) return;
+
+        const now = Date.now();
+        if (now - lastTap < 350) {
+            combo++;
+        } else {
+            combo = 1;
+        }
+        lastTap = now;
+
+        score += (1 + Math.floor(combo / 5));
+        sounds.tap();
+        updateUI();
+    }
+
+    function endGame() {
+        gameActive = false;
+        clearInterval(timerId);
+        tapBtn.disabled = true;
+        startBtn.disabled = false;
+        
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('neon_reactor_top', highScore);
+            statusEl.innerText = "CRITICAL LIMIT REACHED: NEW BEST!";
+            sounds.record();
+        } else {
+            statusEl.innerText = "COOLING DOWN...";
+            sounds.end();
+        }
+        updateUI();
+    }
+
+    function updateUI() {
+        scoreEl.innerText = score;
+        highEl.innerText = highScore;
+        timerEl.innerText = timeLeft;
+        
+        if (combo > 1) {
+            comboEl.innerText = `COMBO ${combo}x`;
+            comboEl.style.opacity = "1";
+            comboEl.style.transform = `scale(${1 + (combo*0.02)})`;
+        } else {
+            comboEl.style.opacity = "0";
+        }
+    }
+
+    startBtn.addEventListener('click', () => {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        startGame();
+    });
+    tapBtn.addEventListener('mousedown', handleTap);
+    document.getElementById('resetBtn').addEventListener('click', () => {
+        if(confirm("Wipe Core Memory?")) {
+            localStorage.clear();
+            highScore = 0;
+            updateUI();
+        }
+    });
+</script>
+</body>
+</html>
